@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workbench — UI/UX Mockups</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #14161a;
+    --ink-2: #3a3f47;
+    --slate: #5b6470;
+    --line: #dfe2e6;
+    --line-2: #eceef1;
+    --paper: #f7f8f9;
+    --white: #ffffff;
+    --signal: #2b5cff;      /* routing blue — the "OpenRouter for work" spine */
+    --signal-soft: #eaf0ff;
+    --amber: #b5730a;       /* approvals / human-in-loop */
+    --amber-soft: #fbf1dd;
+    --green: #1f7a4d;
+    --green-soft: #e4f2ea;
+    --violet: #6b3fd4;      /* apps */
+    --violet-soft: #efe9fc;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 28px 96px; }
+
+  header.masthead { margin-bottom: 40px; }
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--signal); font-weight: 500; margin-bottom: 14px;
+  }
+  h1.title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 46px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1.04; margin-bottom: 16px;
+  }
+  h1.title span { color: var(--signal); }
+  .lede { font-size: 17px; color: var(--slate); max-width: 640px; }
+
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin-top: 26px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+  }
+  .flow .node {
+    background: var(--white); border: 1px solid var(--line);
+    padding: 7px 12px; border-radius: 6px; font-weight: 500;
+  }
+  .flow .node b { color: var(--ink); }
+  .flow .node em { color: var(--slate); font-style: normal; }
+  .flow .arrow { color: var(--signal); font-weight: 700; }
+
+  section.mock { margin-top: 56px; }
+  .mock-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .mock-num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    color: var(--signal); font-weight: 600; letter-spacing: 0.04em;
+  }
+  .mock-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 23px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .mock-note { font-size: 14px; color: var(--slate); margin: 0 0 18px 34px; max-width: 720px; }
+
+  /* generic app frame */
+  .frame {
+    background: var(--white); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: 0 1px 2px rgba(20,22,26,0.04), 0 12px 32px rgba(20,22,26,0.06);
+  }
+  .titlebar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 16px; border-bottom: 1px solid var(--line-2); background: var(--paper);
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #f0685f; } .dot.y { background: #f4bd4f; } .dot.g { background: #58c363; }
+  .titlebar .path {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--slate);
+    margin-left: 10px;
+  }
+
+  /* MODEL SWITCHER pill — the signature element */
+  .switcher {
+    margin-left: auto; display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--signal); border-radius: 999px; overflow: hidden;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+  }
+  .switcher .seg { padding: 5px 12px; color: var(--slate); cursor: default; background: var(--white); }
+  .switcher .seg.on { background: var(--signal); color: #fff; font-weight: 500; }
+  .switcher .auto { background: var(--signal-soft); color: var(--signal); font-weight: 600; }
+
+  /* WORKSPACE layout */
+  .workspace { display: grid; grid-template-columns: 210px 1fr 250px; min-height: 430px; }
+  .rail { border-right: 1px solid var(--line-2); padding: 16px 12px; background: #fcfcfd; }
+  .rail:last-child { border-right: none; border-left: 1px solid var(--line-2); }
+  .rail-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--slate); margin: 4px 6px 10px; font-weight: 500;
+  }
+  .tray-item {
+    display: flex; align-items: center; gap: 9px; padding: 8px 9px; border-radius: 7px;
+    font-size: 13px; color: var(--ink-2); cursor: default; margin-bottom: 2px;
+  }
+  .tray-item:hover { background: var(--line-2); }
+  .tray-item.active { background: var(--signal-soft); color: var(--signal); font-weight: 500; }
+  .chip-ico {
+    width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center;
+    font-size: 12px; flex-shrink: 0; background: var(--line-2);
+  }
+  .chip-ico.sk { background: var(--green-soft); }
+  .chip-ico.pl { background: var(--signal-soft); }
+
+  .canvas { padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; overflow:hidden; }
+  .msg { display: flex; gap: 11px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; display: grid;
+    place-items: center; font-size: 12px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+  }
+  .avatar.user { background: var(--ink); color: #fff; }
+  .avatar.ai { background: var(--signal); color: #fff; }
+  .bubble { font-size: 13.5px; color: var(--ink-2); padding-top: 4px; }
+  .bubble .who { font-weight: 600; color: var(--ink); font-size: 12.5px; margin-bottom: 2px; }
+  .bubble .who .model-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--signal);
+    background: var(--signal-soft); padding: 1px 7px; border-radius: 5px; margin-left: 6px; font-weight: 500;
+  }
+
+  /* action stream / tool calls */
+  .action {
+    border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; margin-top: 2px;
+  }
+  .action-row {
+    display: flex; align-items: center; gap: 9px; padding: 8px 11px; font-size: 12.5px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .action-row + .action-row { border-top: 1px solid var(--line-2); }
+  .tag {
+    font-size: 10px; padding: 1px 7px; border-radius: 4px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .tag.read { background: var(--line-2); color: var(--slate); }
+  .tag.write { background: var(--signal-soft); color: var(--signal); }
+  .tag.gate { background: var(--amber-soft); color: var(--amber); }
+  .action-row .txt { color: var(--ink-2); }
+  .action-row .sys { color: var(--slate); margin-left: auto; }
+
+  .approve-bar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--amber-soft); border-top: 1px solid #f0e2c4; font-size: 12.5px; color: var(--amber);
+  }
+  .btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600;
+    padding: 6px 13px; border-radius: 6px; border: 1px solid transparent; cursor: default;
+  }
+  .btn.approve { background: var(--amber); color: #fff; margin-left: auto; }
+  .btn.deny { background: #fff; color: var(--amber); border-color: #e6d3a8; }
+
+  /* save-as-skill callout */
+  .save-skill {
+    margin-top: 4px; border: 1px dashed var(--green); background: var(--green-soft);
+    border-radius: 8px; padding: 11px 13px; display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; color: #155c39;
+  }
+  .save-skill .btn.save { background: var(--green); color: #fff; margin-left: auto; }
+
+  .artifact {
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 12.5px;
+    background: var(--paper);
+  }
+  .artifact .a-name { font-weight: 600; font-size: 12.5px; margin-bottom: 3px; display:flex; align-items:center; gap:7px;}
+  .artifact .a-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--slate); }
+
+  /* CARD GRID (skills / apps) */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 20px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 10px; padding: 15px; background: var(--white);
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .card .c-top { display: flex; align-items: center; gap: 9px; }
+  .c-badge {
+    width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .c-badge.sk { background: var(--green-soft); }
+  .c-badge.app { background: var(--violet-soft); }
+  .card .c-name { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; }
+  .card .c-desc { font-size: 12.5px; color: var(--slate); flex: 1; }
+  .card .c-foot {
+    display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px; color: var(--slate); padding-top: 8px; border-top: 1px solid var(--line-2);
+  }
+  .pill {
+    font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .pill.shared { background: var(--green-soft); color: var(--green); }
+  .pill.forked { background: var(--violet-soft); color: var(--violet); }
+  .pill.dep { background: var(--signal-soft); color: var(--signal); font-family:'IBM Plex Mono',monospace; font-weight:500;}
+  .c-actions { display: flex; gap: 6px; }
+  .mini-btn {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--white); color: var(--ink-2); cursor: default;
+  }
+  .mini-btn.primary { background: var(--violet); color: #fff; border-color: var(--violet); }
+  .mini-btn.sk { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .section-bar {
+    display: flex; align-items: center; gap: 12px; padding: 13px 20px;
+    border-bottom: 1px solid var(--line-2); background: var(--paper);
+  }
+  .section-bar .sb-title { font-family:'Space Grotesk',sans-serif; font-weight: 600; font-size: 14px; }
+  .search {
+    margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--slate); border: 1px solid var(--line); border-radius: 7px; padding: 6px 12px;
+    background: #fff; min-width: 220px;
+  }
+  .tabrow { display: flex; gap: 4px; }
+  .tab {
+    font-size: 12.5px; padding: 6px 12px; border-radius: 7px; color: var(--slate); cursor: default;
+  }
+  .tab.on { background: var(--ink); color: #fff; font-weight: 500; }
+
+  /* GATEWAY console */
+  .gw { display: grid; grid-template-columns: 1fr 1fr; }
+  .gw-col { padding: 18px 20px; }
+  .gw-col + .gw-col { border-left: 1px solid var(--line-2); }
+  .gw-h {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--slate); margin-bottom: 12px; font-weight: 500;
+  }
+  .perm-row, .audit-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 0;
+    border-bottom: 1px solid var(--line-2); font-size: 12.5px;
+  }
+  .perm-row .p-name { font-weight: 500; }
+  .perm-row .p-scope { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--slate); }
+  .toggle {
+    margin-left: auto; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  }
+  .toggle.on { background: var(--green-soft); color: var(--green); }
+  .toggle.gate { background: var(--amber-soft); color: var(--amber); }
+  .toggle.off { background: var(--line-2); color: var(--slate); }
+  .audit-row { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-2); }
+  .audit-row .a-time { color: var(--slate); }
+  .audit-row .a-model { color: var(--signal); }
+  .audit-row .a-tag { margin-left: auto; }
+
+  /* AUTOMATIONS */
+  .auto-row {
+    display: grid; grid-template-columns: 26px 1fr auto auto; gap: 12px; align-items: center;
+    padding: 13px 20px; border-bottom: 1px solid var(--line-2); font-size: 13px;
+  }
+  .auto-ico { width: 26px; height: 26px; border-radius: 7px; background: var(--signal-soft);
+    display: grid; place-items: center; font-size: 13px; }
+  .auto-name { font-weight: 600; }
+  .auto-trigger { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--slate); }
+  .auto-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--slate); }
+  .status-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; }
+  .status-dot i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .status-dot.live i { background: var(--green); }
+  .status-dot.live { color: var(--green); }
+  .status-dot.paused i { background: var(--slate); }
+  .status-dot.paused { color: var(--slate); }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: var(--slate);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--slate); font-family: 'IBM Plex Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Product Design · Workbench v1.0</div>
+    <h1 class="title">A model-neutral work platform.<br><span>OpenRouter for work.</span></h1>
+    <p class="lede">One agentic desktop that routes any task to any model — Codex, Claude, Gemini, local — against your real work systems. Capabilities, know-how, and governance live above the model, so you're never locked in.</p>
+
+    <div class="flow">
+      <div class="node"><b>Plugins</b> <em>abilities</em></div><span class="arrow">→</span>
+      <div class="node"><b>Skills</b> <em>know-how</em></div><span class="arrow">→</span>
+      <div class="node"><b>Tasks</b> <em>execute</em></div><span class="arrow">→</span>
+      <div class="node"><b>Apps</b> <em>experiences</em></div><span class="arrow">→</span>
+      <div class="node"><b>Automations</b> <em>repeat</em></div>
+    </div>
+  </header>
+
+  <!-- 1. WORKSPACE -->
+  <section class="mock">
+    <div class="mock-head"><span class="mock-num">01</span><span class="mock-title">Workspace — the agentic desktop</span></div>
+    <p class="mock-note">The primary Task surface. Left rail carries active Skills and connected Plugins; right rail holds files and artifacts. The model switcher lives in the title bar — swap models mid-task without losing context.</p>
+
+    <div class="frame">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="path">task · competitive-brief · acme-vs-us</span>
+        <div class="switcher">
+          <span class="seg auto">AUTO</span>
+          <span class="seg">Codex</span>
+          <span class="seg on">Claude</span>
+          <span class="seg">Gemini</span>
+          <span class="seg">Local</span>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <!-- left rail: skills + plugins -->
+        <div class="rail">
+          <div class="rail-label">Active Skills</div>
+          <div class="tray-item active"><span class="chip-ico sk">◆</span> Competitive Brief</div>
+          <div class="tray-item"><span class="chip-ico sk">◆</span> Source Verifier</div>
+          <div class="rail-label" style="margin-top:16px;">Plugins</div>
+          <div class="tray-item"><span class="chip-ico pl">◵</span> Browser</div>
+          <div class="tray-item"><span class="chip-ico pl">◵</span> Google Drive</div>
+          <div class="tray-item"><span class="chip-ico pl">◵</span> GitHub</div>
+          <div class="tray-item"><span class="chip-ico pl">⌘</span> MCP: Notion</div>
+        </div>
+
+        <!-- canvas: conversation + action stream -->
+        <div class="canvas">
+          <div class="msg">
+            <div class="avatar user">You</div>
+            <div class="bubble">
+              <div class="who">You</div>
+              Draft a competitive brief on Acme's new launch. Pull their changelog, cross-check with our Drive notes, and save it as a doc.
+            </div>
+          </div>
+
+          <div class="msg">
+            <div class="avatar ai">W</div>
+            <div class="bubble" style="width:100%;">
+              <div class="who">Workbench <span class="model-tag">via Claude · routed</span></div>
+              Running the Competitive Brief skill. Here's the action stream:
+              <div class="action" style="margin-top:8px;">
+                <div class="action-row"><span class="tag read">read</span><span class="txt">Browser → fetch acme.com/changelog</span><span class="sys">Browser plugin</span></div>
+                <div class="action-row"><span class="tag read">read</span><span class="txt">Drive → search "Acme notes"</span><span class="sys">Drive plugin</span></div>
+                <div class="action-row"><span class="tag write">write</span><span class="txt">Drive → create doc "Acme Brief Q3"</span><span class="sys">gated ↓</span></div>
+              </div>
+              <div class="approve-bar">
+                <span>⚠ Write to Google Drive needs approval</span>
+                <button class="btn deny">Deny</button>
+                <button class="btn approve">Approve write</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="save-skill">
+            <span>✓ This run succeeded. Save these steps as a reusable Skill for your team?</span>
+            <button class="btn save">Save as Skill</button>
+          </div>
+        </div>
+
+        <!-- right rail: artifacts -->
+        <div class="rail">
+          <div class="rail-label">Files & Artifacts</div>
+          <div class="artifact" style="margin-bottom:10px;">
+            <div class="a-name">📄 Acme Brief Q3</div>
+            <div class="a-meta">draft · pending write</div>
+          </div>
+          <div class="artifact" style="margin-bottom:10px;">
+            <div class="a-name">🔗 acme/changelog</div>
+            <div class="a-meta">fetched · 14:02</div>
+          </div>
+          <div class="rail-label" style="margin-top:16px;">Context</div>
+          <div class="artifact">
+            <div class="a-meta">Portable across model swaps — 6 files, 2 sources pinned</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--line-2)"></i> read action</span>
+      <span><i style="background:var(--signal)"></i> write action</span>
+      <span><i style="background:var(--amber)"></i> approval gate</span>
+      <span><i style="background:var(--green)"></i> save-from-success</span>
+    </div>
+  </section>
+
+  <!-- 2. SKILL LIBRARY -->
+  <section class="mock">
+    <div class="mock-head"><span class="mock-num">02</span><span class="mock-title">Skill Library — reusable know-how</span></div>
+    <p class="mock-note">Skills are versioned, dependency-aware packages of working knowledge. Browse, install, author, and share within your company. Each Skill declares the Plugins it needs — know-how and abilities stay cleanly separated.</p>
+
+    <div class="frame">
+      <div class="section-bar">
+        <span class="sb-title">Skill Library</span>
+        <div class="tabrow">
+          <span class="tab on">Company</span>
+          <span class="tab">Mine</span>
+          <span class="tab">Installed</span>
+        </div>
+        <span class="search">⌕ search skills…</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="c-top"><span class="c-badge sk">◆</span><span class="c-name">Competitive Brief</span></div>
+          <div class="c-desc">Researches a competitor, cross-checks internal notes, drafts a structured brief.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="pill dep">needs: Browser</span><span class="pill dep">needs: Drive</span>
+          </div>
+          <div class="c-foot"><span>v2.1</span><span>·</span><span>used 340×</span><span class="pill shared" style="margin-left:auto;">Shared</span></div>
+          <div class="c-actions"><button class="mini-btn sk">Install</button><button class="mini-btn">Preview</button></div>
+        </div>
+
+        <div class="card">
+          <div class="c-top"><span class="c-badge sk">◆</span><span class="c-name">PR Triage</span></div>
+          <div class="c-desc">Labels, summarizes, and routes inbound pull requests by risk and area.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="pill dep">needs: GitHub</span>
+          </div>
+          <div class="c-foot"><span>v1.4</span><span>·</span><span>used 128×</span><span class="pill shared" style="margin-left:auto;">Shared</span></div>
+          <div class="c-actions"><button class="mini-btn sk">Install</button><button class="mini-btn">Preview</button></div>
+        </div>
+
+        <div class="card" style="border-color:var(--green); border-width:1.5px;">
+          <div class="c-top"><span class="c-badge sk">＋</span><span class="c-name">Acme Brief (new)</span></div>
+          <div class="c-desc">Captured from your successful run. Name it, edit steps, and publish to the team.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="pill dep">needs: Browser</span><span class="pill dep">needs: Drive</span>
+          </div>
+          <div class="c-foot"><span>draft</span><span>·</span><span>from Task run</span><span class="pill forked" style="margin-left:auto;">Promoted</span></div>
+          <div class="c-actions"><button class="mini-btn sk">Publish</button><button class="mini-btn">Edit steps</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. APP GALLERY -->
+  <section class="mock">
+    <div class="mock-head"><span class="mock-num">03</span><span class="mock-title">App Gallery — persistent experiences</span></div>
+    <p class="mock-note">Successful workflows crystallize into Apps: durable mini-applications with their own UI. Apps are shared, forked, and customized across the company — forking preserves lineage so improvements track upstream.</p>
+
+    <div class="frame">
+      <div class="section-bar">
+        <span class="sb-title">Company Apps</span>
+        <div class="tabrow"><span class="tab on">All</span><span class="tab">Forked by me</span><span class="tab">Published</span></div>
+        <span class="search">⌕ search apps…</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="c-top"><span class="c-badge app">▦</span><span class="c-name">Investor Update</span></div>
+          <div class="c-desc">Generates the weekly investor update from metrics, Drive, and email threads.</div>
+          <div class="c-foot"><span>run on: AUTO</span><span>·</span><span>34 forks</span></div>
+          <div class="c-actions"><button class="mini-btn primary">Open</button><button class="mini-btn">Fork</button></div>
+        </div>
+        <div class="card">
+          <div class="c-top"><span class="c-badge app">▦</span><span class="c-name">Redline Reviewer</span></div>
+          <div class="c-desc">Contract redline cockpit — flags risky clauses against your playbook.</div>
+          <div class="c-foot"><span>run on: Claude</span><span>·</span><span>12 forks</span></div>
+          <div class="c-actions"><button class="mini-btn primary">Open</button><button class="mini-btn">Fork</button></div>
+        </div>
+        <div class="card">
+          <div class="c-top"><span class="c-badge app">▦</span><span class="c-name">PR Cockpit ⑂</span></div>
+          <div class="c-desc">Your fork of the shared triage App — customized for the platform team.</div>
+          <div class="c-foot"><span>forked from PR Triage</span><span class="pill forked" style="margin-left:auto;">Lineage kept</span></div>
+          <div class="c-actions"><button class="mini-btn primary">Open</button><button class="mini-btn">Sync upstream</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. PLUGIN MANAGER -->
+  <section class="mock">
+    <div class="mock-head"><span class="mock-num">04</span><span class="mock-title">Plugin & Connector Manager — abilities</span></div>
+    <p class="mock-note">Connect work systems as Plugins. First-party connectors plus any MCP server or OpenAI-spec plugin — reuse existing ecosystems instead of rebuilding integrations. Every plugin declares its actions and required scopes.</p>
+
+    <div class="frame">
+      <div class="section-bar">
+        <span class="sb-title">Connected Plugins</span>
+        <div class="tabrow"><span class="tab on">First-party</span><span class="tab">MCP servers</span><span class="tab">OpenAI plugins</span></div>
+        <span class="search">＋ Add connector</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="c-top"><span class="c-badge pl" style="background:var(--signal-soft)">◵</span><span class="c-name">Google Drive</span></div>
+          <div class="c-desc">Read & write docs, search, share.</div>
+          <div class="c-foot"><span class="tag read">read</span><span class="tag write">write</span><span class="pill shared" style="margin-left:auto;">Connected</span></div>
+        </div>
+        <div class="card">
+          <div class="c-top"><span class="c-badge pl" style="background:var(--signal-soft)">◵</span><span class="c-name">GitHub</span></div>
+          <div class="c-desc">Repos, PRs, issues, actions.</div>
+          <div class="c-foot"><span class="tag read">read</span><span class="tag write">write</span><span class="pill shared" style="margin-left:auto;">Connected</span></div>
+        </div>
+        <div class="card">
+          <div class="c-top"><span class="c-badge pl" style="background:var(--violet-soft)">⌘</span><span class="c-name">MCP: Notion</span></div>
+          <div class="c-desc">Mounted from an MCP server — tools & resources auto-imported.</div>
+          <div class="c-foot"><span class="pill dep">MCP</span><span class="pill shared" style="margin-left:auto;">Connected</span></div>
+        </div>
+        <div class="card">
+          <div class="c-top"><span class="c-badge pl" style="background:var(--line-2)">◵</span><span class="c-name">Local Filesystem</span></div>
+          <div class="c-desc">Sandboxed read/write to a chosen folder.</div>
+          <div class="c-foot"><span class="tag read">read</span><span class="tag gate">write · gated</span></div>
+        </div>
+        <div class="card">
+          <div class="c-top"><span class="c-badge pl" style="background:var(--line-2)">✉</span><span class="c-name">Gmail</span></div>
+          <div class="c-desc">Read threads, draft & send with approval.</div>
+          <div class="c-foot"><span class="tag read">read</span><span class="tag gate">send · gated</span></div>
+        </div>
+        <div class="card" style="border-style:dashed;">
+          <div class="c-top"><span class="c-badge pl" style="background:var(--line-2)">＋</span><span class="c-name">Add via manifest</span></div>
+          <div class="c-desc">Paste an MCP URL or OpenAI plugin manifest to import its abilities.</div>
+          <div class="c-foot"><span>MCP · OpenAI spec</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. CAPABILITY GATEWAY -->
+  <section class="mock">
+    <div class="mock-head"><span class="mock-num">05</span><span class="mock-title">Capability Gateway — the governance spine</span></div>
+    <p class="mock-note">Every action passes through the Gateway. Left: fine-grained permissions per plugin action, with human-in-the-loop gates. Right: the immutable audit log — who, which model, which plugin, what data, what was approved.</p>
+
+    <div class="frame">
+      <div class="section-bar"><span class="sb-title">Capability Gateway</span><span class="search" style="margin-left:auto;">policy: PII → local models only</span></div>
+      <div class="gw">
+        <div class="gw-col">
+          <div class="gw-h">Permissions & approvals</div>
+          <div class="perm-row"><span class="p-name">Drive</span> <span class="p-scope">read.files</span><span class="toggle on">Allowed</span></div>
+          <div class="perm-row"><span class="p-name">Drive</span> <span class="p-scope">write.docs</span><span class="toggle gate">Needs approval</span></div>
+          <div class="perm-row"><span class="p-name">Gmail</span> <span class="p-scope">send.mail</span><span class="toggle gate">Needs approval</span></div>
+          <div class="perm-row"><span class="p-name">GitHub</span> <span class="p-scope">merge.pr</span><span class="toggle off">Blocked</span></div>
+          <div class="perm-row"><span class="p-name">Filesystem</span> <span class="p-scope">delete.file</span><span class="toggle off">Blocked</span></div>
+          <div class="gw-h" style="margin-top:18px;">Credential vault</div>
+          <div class="perm-row"><span class="p-name">🔒 Injected at runtime</span> <span class="p-scope">never exposed to models</span><span class="toggle on">Sealed</span></div>
+        </div>
+        <div class="gw-col">
+          <div class="gw-h">Audit log — immutable</div>
+          <div class="audit-row"><span class="a-time">14:02</span> <span>drive.read</span> <span class="a-model">·claude</span> <span class="a-tag tag read">ok</span></div>
+          <div class="audit-row"><span class="a-time">14:03</span> <span>drive.write</span> <span class="a-model">·claude</span> <span class="a-tag tag gate">approved</span></div>
+          <div class="audit-row"><span class="a-time">14:05</span> <span>gmail.send</span> <span class="a-model">·gemini</span> <span class="a-tag tag gate">denied</span></div>
+          <div class="audit-row"><span class="a-time">14:09</span> <span>github.read</span> <span class="a-model">·codex</span> <span class="a-tag tag read">ok</span></div>
+          <div class="audit-row"><span class="a-time">14:11</span> <span>fs.write</span> <span class="a-model">·local</span> <span class="a-tag tag gate">approved</span></div>
+          <div class="audit-row"><span class="a-time">14:14</span> <span>notion.read</span> <span class="a-model">·claude</span> <span class="a-tag tag read">ok</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. AUTOMATIONS -->
+  <section class="mock">
+    <div class="mock-head"><span class="mock-num">06</span><span class="mock-title">Automations — repeat the work</span></div>
+    <p class="mock-note">Pin a Task or App to a schedule or event trigger. Automations run unattended under the same Gateway guardrails — destructive steps can still require a human. Every run is logged, diffable, and re-runnable.</p>
+
+    <div class="frame">
+      <div class="section-bar"><span class="sb-title">Automations</span><span class="search" style="margin-left:auto;">＋ New automation</span></div>
+      <div class="auto-row">
+        <div class="auto-ico">⟳</div>
+        <div><div class="auto-name">Morning PR Triage</div><div class="auto-trigger">event · new PR opened</div></div>
+        <div class="auto-meta">runs PR Triage skill · AUTO model</div>
+        <div class="status-dot live"><i></i>Live</div>
+      </div>
+      <div class="auto-row">
+        <div class="auto-ico">⟳</div>
+        <div><div class="auto-name">Weekly Investor Update</div><div class="auto-trigger">schedule · Mon 08:00</div></div>
+        <div class="auto-meta">runs Investor Update app · Claude</div>
+        <div class="status-dot live"><i></i>Live</div>
+      </div>
+      <div class="auto-row">
+        <div class="auto-ico">⟳</div>
+        <div><div class="auto-name">Inbox Digest</div><div class="auto-trigger">schedule · daily 07:30</div></div>
+        <div class="auto-meta">reads Gmail · send gated for approval</div>
+        <div class="status-dot paused"><i></i>Paused</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Workbench — model-neutral, AI-first work platform · UI/UX mockups accompanying PRD v1.0<br>
+    Plugins provide abilities → Skills provide know-how → Tasks execute work → Apps provide experiences → Automations repeat work.
+  </footer>
+
+</div>
+</body>
+</html>
