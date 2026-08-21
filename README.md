@@ -1,6 +1,6 @@
 # Open Coworker
 
-Model-neutral AI work platform — Phase 1 PoC (Slack Daily Summary).
+Model-neutral AI work platform for macOS — connects Slack and Linear, runs AI skills, delivers digests and action items.
 
 ## Quick start
 
@@ -11,118 +11,124 @@ npm run dev
 
 Walk through the 4-step onboarding: Welcome → AI Model → Slack → Done.
 
-See [SETUP.md](SETUP.md) for prerequisites (Claude Code or Anthropic API key, Slack app).
+---
+
+## Product overview
+
+Open Coworker is a macOS desktop app (Electron + React) that acts as an AI-powered coworker assistant. It reads your Slack activity, runs AI skills against it, and takes action — summarizing conversations, extracting tasks, and creating work items in Linear.
+
+### Core capabilities
+
+| Capability | Description |
+|---|---|
+| **Daily Slack Summary** | Fetches 24h of channel activity, scores by importance, summarises with AI, delivers a styled HTML digest + macOS notification |
+| **Weekly Action Items → Linear** | Scans 7 days of Slack, extracts action items with AI, shows a review table, then creates Linear issues assigned to the right members |
+| **Skills** | View, edit, and export reusable AI skill definitions in formats compatible with Claude Code, ChatGPT, and other agent tools |
+| **Linear connector** | Connect a Linear workspace via API key; platform provides the capability, clients enable it via config |
 
 ---
 
-## Slack authentication modes
+## AI providers
 
-The app supports two modes, switchable via `~/.workbench/config.json`.
+The app is model-neutral. Configure one of:
 
-### Mode 1: Token paste (current default — PoC)
+| Provider | How to connect |
+|---|---|
+| **Claude Code** (claude.ai subscription) | Install the `claude` CLI; detected automatically |
+| **Anthropic API** | Set your API key in Preferences |
 
+---
+
+## Connectors
+
+### Slack
+
+Two auth modes, switchable via `~/.workbench/config.json`.
+
+**Mode 1 — Token paste (default, PoC)**
 ```json
 { "slackAuthMode": "token" }
 ```
+Paste a Bot OAuth Token (`xoxb-…`) from your Slack app's OAuth & Permissions page.
 
-User pastes a Bot OAuth Token (`xoxb-…`) obtained from their Slack app's **OAuth & Permissions** page. Simple, no backend needed. Good for early testers who can follow setup steps.
-
-### Mode 2: OAuth relay backend (production)
-
+**Mode 2 — OAuth relay (production)**
 ```json
 { "slackAuthMode": "oauth-relay", "oauthRelayUrl": "https://your-worker.workers.dev" }
 ```
+User clicks "Sign in with Slack" in the app — browser opens, they authorize, done. A Cloudflare Worker holds the Client Secret and brokers the OAuth exchange. See [`relay/DEPLOY.md`](relay/DEPLOY.md) for full deployment steps.
 
-User clicks "Sign in with Slack" — browser opens, they authorize, done. No token to copy.
-
-#### How it works
-
+**OAuth relay flow:**
 ```
-Desktop app generates random state token
-  → Opens browser to https://relay/slack/start?state=xxx
-  → Relay redirects to Slack OAuth (holds Client Secret securely)
-  → User authorizes in browser
-  → Slack calls https://relay/slack/callback?code=yyy&state=xxx
-  → Relay exchanges code for token, stores it keyed by state (5-min TTL)
-  → Desktop app polls https://relay/slack/token?state=xxx every 2s
-  → Gets token back, stores encrypted in macOS Keychain
+App generates state token
+  → Opens browser: https://relay/slack/start?state=xxx
+  → Relay redirects to Slack OAuth (Client Secret never leaves Cloudflare)
+  → User clicks Allow
+  → Slack calls: https://relay/slack/callback?code=yyy&state=xxx
+  → Relay exchanges code → stores token in KV (5-min TTL)
+  → App polls: https://relay/slack/token?state=xxx every 2s
+  → Token returned → stored encrypted in macOS Keychain
 ```
 
-#### Building the relay (Cloudflare Worker)
+### Linear
 
-The relay needs three endpoints. Deploy on Cloudflare Workers (free tier).
+Connect from **Preferences → Linear** by pasting a Personal API Key (`lin_api_…`) from Linear → Settings → API → Personal API Keys.
 
-**Environment variables to set in the Worker:**
-- `SLACK_CLIENT_ID` — from your Slack app's Basic Information
-- `SLACK_CLIENT_SECRET` — from your Slack app's Basic Information
-- `SLACK_SCOPES` — `channels:history,channels:read,groups:history,groups:read,im:history,mpim:history,search:read,users:read,reactions:read`
+Once connected, the **Weekly Action Items → Linear** skill becomes available on the Dashboard.
 
-**Slack app config:**
-- Add `https://your-worker.workers.dev/slack/callback` as a Redirect URL in OAuth & Permissions
+---
 
-**Worker pseudocode:**
+## Skills
 
-```typescript
-// GET /slack/start?state=xxx
-// → redirect to Slack OAuth, passing state through
-export function handleStart(state: string, env: Env): Response {
-  const url = new URL('https://slack.com/oauth/v2/authorize')
-  url.searchParams.set('client_id', env.SLACK_CLIENT_ID)
-  url.searchParams.set('scope', env.SLACK_SCOPES)
-  url.searchParams.set('redirect_uri', `${env.RELAY_URL}/slack/callback`)
-  url.searchParams.set('state', state)
-  return Response.redirect(url.toString())
-}
+Skills are reusable AI instruction sets stored as Markdown files at `~/.workbench/skills/*.md`.
 
-// GET /slack/callback?code=yyy&state=xxx
-// → exchange code for token, store in KV with 5-min TTL
-export async function handleCallback(code: string, state: string, env: Env): Promise<Response> {
-  const res = await fetch('https://slack.com/api/oauth.v2.access', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: env.SLACK_CLIENT_ID,
-      client_secret: env.SLACK_CLIENT_SECRET,
-      code,
-      redirect_uri: `${env.RELAY_URL}/slack/callback`,
-    }),
-  })
-  const json = await res.json() as { ok: boolean; access_token?: string; error?: string }
-  if (!json.ok || !json.access_token) {
-    return new Response(JSON.stringify({ error: json.error }), { status: 400 })
-  }
-  // Store token in KV, keyed by state, TTL 5 min
-  await env.KV.put(state, json.access_token, { expirationTtl: 300 })
-  return new Response('<h2>Connected! You can close this tab.</h2>', {
-    headers: { 'Content-Type': 'text/html' },
-  })
-}
+### Built-in skills
 
-// GET /slack/token?state=xxx
-// → return token if ready, or { pending: true } if not yet
-export async function handleToken(state: string, env: Env): Promise<Response> {
-  const token = await env.KV.get(state)
-  if (token) {
-    await env.KV.delete(state)
-    return new Response(JSON.stringify({ token }))
-  }
-  return new Response(JSON.stringify({ pending: true }))
-}
+| Skill | Trigger | What it does |
+|---|---|---|
+| `daily-slack-summary` | Scheduled / manual | 24h Slack digest → HTML report + notification |
+| `weekly-action-items` | Manual | 7-day Slack scan → AI extraction → Linear issue creation |
+
+### Weekly Action Items flow (two-phase)
+
+```
+1. Generate  →  Slack fetch (7 days) + thread replies
+               + LLM extraction (titles, assignees, priority, channel)
+               + Linear member lookup + fuzzy name matching
+               → Returns candidate list for review
+
+2. Review    →  Editable table: title · priority · assignee dropdown · channel
+               User edits, removes, or reorders candidates
+
+3. Create    →  Only approved candidates are written to Linear
+               Each issue: title, description with context, assignee, team
+               Results shown: identifier · title · assignee · link
 ```
 
-**KV namespace:** bind a KV namespace called `KV` to the Worker in the Cloudflare dashboard.
+### Skills page
 
-#### Switching modes
+The **Skills** tab in the app lets you:
+- Browse all skill definitions (built-in and custom)
+- Edit any skill's name, description, tags, and Markdown body
+- Create new skills from a template
+- **Export** in three formats:
+  - **Claude Code** — full `SKILL.md` with YAML frontmatter, drop into `.claude/skills/<name>/SKILL.md`
+  - **ChatGPT / Generic** — clean Markdown body, paste as custom instructions or system prompt
+  - **Raw** — full file content
 
-1. Deploy the Worker, note the URL (e.g. `https://open-coworker-relay.workers.dev`)
-2. Edit `~/.workbench/config.json`:
-   ```json
-   {
-     "slackAuthMode": "oauth-relay",
-     "oauthRelayUrl": "https://open-coworker-relay.workers.dev"
-   }
-   ```
-3. Restart the app — onboarding step 3 now shows "Sign in with Slack" instead of the token field.
+Skill files use YAML frontmatter:
+```markdown
+---
+name: My Skill
+description: What it does
+tags: slack, summary
+created: 2026-08-21
+updated: 2026-08-21
+builtIn: false
+---
+
+## Purpose
+...
+```
 
 ---
 
@@ -130,25 +136,79 @@ export async function handleToken(state: string, env: Env): Promise<Response> {
 
 ```
 Electron main process
-  ├── Capability Gateway   — credential vault (safeStorage), audit log
-  ├── Model Provider Router
-  │     ├── Claude Code Harness  (spawns `claude` CLI subprocess)
-  │     └── Anthropic API        (direct SDK call)
-  ├── Slack Connector       — token or OAuth relay, Web API wrapper
-  ├── Daily Summary Skill   — orchestrates Slack fetch → LLM → HTML
-  └── Scheduler             — node-cron, weekdays 07:30
+  ├── Gateway              — config (JSON), secrets (safeStorage/Keychain), audit log
+  ├── Provider Router
+  │     ├── Claude Code    — spawns `claude` CLI subprocess
+  │     └── Anthropic API  — direct SDK call
+  ├── Connectors
+  │     ├── Slack          — token or OAuth relay, Web API wrapper
+  │     └── Linear         — API key auth, GraphQL (teams, members, issue create)
+  ├── Skills
+  │     ├── daily-slack-summary    — Slack → LLM → HTML
+  │     ├── weekly-action-items    — Slack → LLM → review → Linear
+  │     └── manager                — CRUD + export for skill .md files
+  └── Scheduler            — node-cron, weekdays 07:30
 
 Electron renderer (React + Tailwind)
-  ├── Onboarding (4 steps)
-  ├── Dashboard (run now, progress log, output link)
-  └── Preferences (schedule, channel limit, provider)
+  ├── Onboarding          — 4-step setup wizard
+  ├── Dashboard           — run skills, progress log, output links
+  ├── Skills              — browse, edit, export skill definitions
+  └── Preferences         — schedule, provider, Slack, Linear connectors
+
+relay/ (Cloudflare Worker)
+  ├── /slack/start        — redirect to Slack OAuth
+  ├── /slack/callback     — exchange code for token, store in KV
+  └── /slack/token        — poll for token (desktop app polls every 2s)
 ```
+
+---
+
+## Data flow — Weekly Action Items
+
+```
+Slack (7 days)
+  ↓ conversations.history + conversations.replies (per channel)
+  ↓ users.info (resolve display names)
+  ↓
+LLM (Claude Code or Anthropic API)
+  ↓ structured extraction prompt → JSON
+  ↓ { title, description, assignee, channel, priority }[]
+  ↓
+Linear API
+  ↓ GET teams + users (member list for assignee dropdown)
+  ↓ fuzzy name match (Slack display name ↔ Linear member name)
+  ↓
+Review UI (Dashboard)
+  ↓ user edits / removes / reassigns candidates
+  ↓
+Linear API
+  ↓ mutation IssueCreate per approved candidate
+  ↓ { identifier, url, title } returned
+  ↓
+Result summary (identifier + link per created issue)
+```
+
+---
 
 ## File locations
 
 | Path | Contents |
 |------|----------|
-| `~/.workbench/config.json` | App config (provider, schedule, Slack metadata, auth mode) |
-| `~/.workbench/secrets.enc` | Encrypted tokens and API keys (macOS safeStorage) |
-| `~/.workbench/summaries/YYYY-MM-DD.html` | Generated HTML summaries |
-| `~/.workbench/audit.log` | Tool call audit log (NDJSON) |
+| `~/.workbench/config.json` | App config (provider, schedule, Slack metadata, Linear metadata, auth mode) |
+| `~/.workbench/secrets.enc` | Encrypted credentials: Slack token, Anthropic key, Linear API key (macOS safeStorage) |
+| `~/.workbench/summaries/YYYY-MM-DD.html` | Generated daily HTML summaries |
+| `~/.workbench/skills/*.md` | Skill definition files (YAML frontmatter + Markdown body) |
+| `~/.workbench/audit.log` | Skill run audit log (NDJSON: timestamp, skill, provider, status) |
+| `relay/` | Cloudflare Worker source for OAuth relay |
+| `relay/DEPLOY.md` | Step-by-step relay deployment guide |
+
+---
+
+## Security
+
+- All credentials stored encrypted via Electron `safeStorage` (macOS Keychain-backed)
+- No secrets in source code or config files
+- Slack Client Secret never leaves the Cloudflare Worker
+- Linear API key scoped to the workspace; revoke from Linear Settings anytime
+- OAuth relay tokens expire after 5 minutes and are deleted on first read
+- Audit log records every skill invocation (no message content logged)

@@ -18,6 +18,19 @@ contextBridge.exposeInMainWorld('api', {
   connectSlack: (token?: string) => ipcRenderer.invoke('slack:connect', token),
   disconnectSlack: () => ipcRenderer.invoke('slack:disconnect'),
 
+  // Linear
+  connectLinear: (apiKey: string) => ipcRenderer.invoke('linear:connect', apiKey),
+  disconnectLinear: () => ipcRenderer.invoke('linear:disconnect'),
+  generateCandidates: () => ipcRenderer.invoke('linear:generate-candidates'),
+  createFromCandidates: (candidates: unknown[], teamId: string) => ipcRenderer.invoke('linear:create-from-candidates', candidates, teamId),
+
+  // Skills
+  listSkills: () => ipcRenderer.invoke('skills:list'),
+  getSkill: (id: string) => ipcRenderer.invoke('skills:get', id),
+  saveSkill: (id: string, meta: Record<string, unknown>, body: string) => ipcRenderer.invoke('skills:save', id, meta, body),
+  deleteSkill: (id: string) => ipcRenderer.invoke('skills:delete', id),
+  exportSkill: (id: string, format: string) => ipcRenderer.invoke('skills:export', id, format),
+
   // Skill
   runSummary: () => ipcRenderer.invoke('skill:run'),
   openOutput: (path: string) => ipcRenderer.invoke('skill:open-output', path),

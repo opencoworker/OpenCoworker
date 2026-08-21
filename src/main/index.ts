@@ -5,6 +5,7 @@ import { createTray, updateTrayMenu } from './tray'
 import { registerIpcHandlers } from './ipc'
 import { loadConfig } from './gateway'
 import { startScheduler } from './scheduler'
+import { seedBuiltins } from './skills/manager'
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.opencoworker.app')
 
@@ -38,6 +39,7 @@ app.whenReady().then(() => {
   }
 
   registerIpcHandlers(emitWithTray)
+  seedBuiltins()
 
   // Start scheduler if previously enabled
   const config = loadConfig()

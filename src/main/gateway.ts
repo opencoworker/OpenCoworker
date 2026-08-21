@@ -22,6 +22,9 @@ export interface Config {
   // Slack auth mode: 'token' = paste a token (PoC), 'oauth-relay' = backend OAuth flow (production)
   slackAuthMode: 'token' | 'oauth-relay'
   oauthRelayUrl: string
+  // Linear connector (enabled per client via config)
+  linearConnected: boolean
+  linearWorkspaceName: string
 }
 
 const DEFAULT_CONFIG: Config = {
@@ -36,7 +39,9 @@ const DEFAULT_CONFIG: Config = {
   schedulerEnabled: false,
   lastSummaryDate: '',
   slackAuthMode: 'token',
-  oauthRelayUrl: ''
+  oauthRelayUrl: '',
+  linearConnected: false,
+  linearWorkspaceName: ''
 }
 
 function ensureDataDir(): void {
@@ -75,6 +80,7 @@ interface Secrets {
   slackAccessToken?: string
   anthropicApiKey?: string
   openaiApiKey?: string
+  linearApiKey?: string
 }
 
 export function loadSecrets(): Secrets {
@@ -119,7 +125,8 @@ export function secretsPresent(): Record<keyof Secrets, boolean> {
   return {
     slackAccessToken: !!s.slackAccessToken,
     anthropicApiKey: !!s.anthropicApiKey,
-    openaiApiKey: !!s.openaiApiKey
+    openaiApiKey: !!s.openaiApiKey,
+    linearApiKey: !!s.linearApiKey
   }
 }
 

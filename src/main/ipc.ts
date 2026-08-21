@@ -3,6 +3,9 @@ import { loadConfig, updateConfig, setSecret, secretsPresent } from './gateway'
 import { complete } from './providers/router'
 import { detectProviders } from './providers/router'
 import { connectWithToken, connectViaOAuthRelay, disconnectSlack, resetClient } from './connectors/slack'
+import { connectWithApiKey as connectLinearWithApiKey, disconnectLinear } from './connectors/linear'
+import { generateCandidates, createFromCandidates, ActionCandidate } from './skills/weekly-action-items'
+import { listSkills, getSkill, saveSkill, deleteSkill, exportForClaudeCode, exportForChatGPT, exportRaw } from './skills/manager'
 import { triggerSummary, startScheduler, stopScheduler, setSchedulerCallbacks } from './scheduler'
 
 type EventEmitter = (event: string, ...args: unknown[]) => void
@@ -65,6 +68,45 @@ export function registerIpcHandlers(emit: EventEmitter): void {
     return { ok: true }
   })
 
+  // Linear connector
+  ipcMain.handle('linear:connect', async (_e, apiKey: string) => {
+    try {
+      await connectLinearWithApiKey(apiKey)
+      return { ok: true, config: loadConfig() }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('linear:disconnect', () => {
+    disconnectLinear()
+    return { ok: true }
+  })
+
+  ipcMain.handle('linear:generate-candidates', async () => {
+    try {
+      const data = await generateCandidates(
+        (step, msg) => emit('skill:progress', { step, message: msg })
+      )
+      return { ok: true, data }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('linear:create-from-candidates', async (_e, candidates: ActionCandidate[], teamId: string) => {
+    try {
+      const result = await createFromCandidates(
+        candidates,
+        teamId,
+        (step, msg) => emit('skill:progress', { step, message: msg })
+      )
+      return { ok: true, result }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
   // Run skill manually
   ipcMain.handle('skill:run', async () => {
     try {
@@ -88,6 +130,21 @@ export function registerIpcHandlers(emit: EventEmitter): void {
   ipcMain.handle('scheduler:stop', () => {
     stopScheduler()
     return { ok: true }
+  })
+
+  // Skills management
+  ipcMain.handle('skills:list', () => listSkills())
+  ipcMain.handle('skills:get', (_e, id: string) => getSkill(id))
+  ipcMain.handle('skills:save', (_e, id: string, meta: Parameters<typeof saveSkill>[1], body: string) => {
+    return saveSkill(id, meta, body)
+  })
+  ipcMain.handle('skills:delete', (_e, id: string) => { deleteSkill(id); return { ok: true } })
+  ipcMain.handle('skills:export', (_e, id: string, format: 'claude-code' | 'chatgpt' | 'raw') => {
+    const skill = getSkill(id)
+    if (!skill) return null
+    if (format === 'claude-code') return exportForClaudeCode(skill)
+    if (format === 'chatgpt') return exportForChatGPT(skill)
+    return exportRaw(skill)
   })
 
   // Wire scheduler callbacks → renderer events

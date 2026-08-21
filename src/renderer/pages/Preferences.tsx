@@ -10,6 +10,9 @@ export default function Preferences({ onBack }: PreferencesProps): React.JSX.Ele
   const [channelLimit, setChannelLimit] = useState(20)
   const [schedulerEnabled, setSchedulerEnabled] = useState(true)
   const [anthropicKey, setAnthropicKey] = useState('')
+  const [linearApiKey, setLinearApiKey] = useState('')
+  const [linearConnecting, setLinearConnecting] = useState(false)
+  const [linearError, setLinearError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -46,6 +49,25 @@ export default function Preferences({ onBack }: PreferencesProps): React.JSX.Ele
     if (!confirm('Disconnect Slack? You will need to re-authorize to use this app.')) return
     await window.api.disconnectSlack()
     alert('Slack disconnected. Restart the app to reconnect.')
+  }
+
+  async function handleConnectLinear(): Promise<void> {
+    if (!linearApiKey.trim()) return
+    setLinearConnecting(true)
+    setLinearError('')
+    const res = await window.api.connectLinear(linearApiKey.trim())
+    setLinearConnecting(false)
+    if (res.ok) {
+      setLinearApiKey('')
+      setConfig(res.config as Record<string, unknown>)
+    } else {
+      setLinearError(res.error ?? 'Connection failed')
+    }
+  }
+
+  async function handleDisconnectLinear(): Promise<void> {
+    await window.api.disconnectLinear()
+    setConfig((c) => ({ ...c, linearConnected: false, linearWorkspaceName: '' }))
   }
 
   return (
@@ -113,6 +135,48 @@ export default function Preferences({ onBack }: PreferencesProps): React.JSX.Ele
               Disconnect
             </button>
           </div>
+        </div>
+
+        {/* Linear connector */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-ink">Linear</h2>
+          {config.linearConnected ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600">{(config.linearWorkspaceName as string) || 'Connected'}</p>
+                <p className="text-xs text-slate-400">API key stored securely</p>
+              </div>
+              <button
+                onClick={handleDisconnectLinear}
+                className="text-xs text-red-500 hover:text-red-700 border border-red-200 rounded-lg px-3 py-1.5"
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-slate-400">
+                Get your API key from Linear → Settings → API → Personal API Keys
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={linearApiKey}
+                  onChange={(e) => { setLinearApiKey(e.target.value); setLinearError('') }}
+                  placeholder="lin_api_…"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-signal"
+                />
+                <button
+                  onClick={handleConnectLinear}
+                  disabled={linearConnecting || !linearApiKey.trim()}
+                  className="bg-signal text-white rounded-lg px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-40"
+                >
+                  {linearConnecting ? '…' : 'Connect'}
+                </button>
+              </div>
+              {linearError && <p className="text-xs text-red-500">{linearError}</p>}
+            </div>
+          )}
         </div>
 
         {/* AI provider */}
